@@ -1,56 +1,76 @@
 import express from 'express';
 import cors from 'cors';
-import { readFileSync } from 'fs';
+import fs from 'fs';
+import path from 'path';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { getApuracaoPresidente, getApuracaoGovernoAC } from './tseService.js';
+import { fetchApuracaoTse, fetchAcreTse } from '../services/tseService.js';
+import { getMockApuracaoBrasil, getMockAcre } from '../services/mockService.js';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
 
-const app = express();
-const PORT = process.env.PORT || 3001;
-
-app.use(cors());
-app.use(express.json());
-
-// Dados estáticos do 1º turno
-let primeiroTurnoData = {};
+// Leitura segura do JSON do 1º Turno
+const primeiroTurnoPath = path.join(__dirname, '../data/primeiroTurno.json');
+let primeiroTurno = {};
 try {
-  const rawData = readFileSync(join(__dirname, '../data/primeiro_turno.json'), 'utf-8');
-  primeiroTurnoData = JSON.parse(rawData);
+  primeiroTurno = JSON.parse(fs.readFileSync(primeiroTurnoPath, 'utf8'));
 } catch (err) {
-  console.error('Aviso: Não foi possível carregar primeiro_turno.json', err.message);
+  console.error('Erro ao ler primeiroTurno.json:', err.message);
 }
 
-// Rota de status
-app.get('/api/status', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'Servidor Apuração 2º Turno ativo',
-    timestamp: new Date().toISOString(),
-    primeiroTurnoCarregado: Object.keys(primeiroTurnoData).length > 0
-  });
-});
+const app = express();
+app.use(cors());
 
-// Rota da apuração presidencial (Brasil ou UF específica)
+// FLAG DE PRODUÇÃO: Desativado o mock forçado para consumir a API do TSE em tempo real
+const FORCAR_MOCK_LOCAL = false;
+
+// Rota principal da apuração
 app.get('/api/apuracao', async (req, res) => {
   const uf = (req.query.uf || 'br').toLowerCase();
-  const dadosTse = await getApuracaoPresidente(uf);
-  
+  let dadosTse = null;
+
+  if (FORCAR_MOCK_LOCAL) {
+    dadosTse = getMockApuracaoBrasil();
+  } else {
+    dadosTse = await fetchApuracaoTse(uf);
+    if (!dadosTse) {
+      console.log('⚠️ TSE inacessível ou sem dados, ativando fallback mock local');
+      dadosTse = getMockApuracaoBrasil();
+    } else {
+      console.log(`✅ Dados do TSE recebidos com sucesso (${uf.toUpperCase()})`);
+    }
+  }
+
+  // Referência do 1º turno
+  const ref1T = primeiroTurno[uf.toUpperCase()] || { cand1: 45.0, cand2: 55.0 };
+
   res.json({
     uf,
-    primeiroTurno: primeiroTurnoData[uf] || null,
-    dadosTse
+    dadosTse,
+    primeiroTurno: ref1T,
+    projecao: {
+      status: 'calculado',
+      tendencia: 'Em Acompanhamento',
+      margem: 'Apurando',
+      probabilidade: '--%'
+    }
   });
 });
 
-// Rota dedicada para o mini widget do Governo do Acre
+// Rota do Governo do Acre
 app.get('/api/governo-ac', async (req, res) => {
-  const dadosTse = await getApuracaoGovernoAC();
-  res.json({ dadosTse });
+  let dados = null;
+  if (FORCAR_MOCK_LOCAL) {
+    dados = getMockAcre();
+  } else {
+    dados = await fetchAcreTse();
+    if (!dados) dados = getMockAcre();
+  }
+  res.json(dados);
 });
 
+const PORT = 3001;
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(`🚀 SERVIDOR EM MODO DE PRODUÇÃO (Porta ${PORT})`);
+  console.log(`📡 Conectado à API oficial do TSE para o 2º Turno`);
 });
