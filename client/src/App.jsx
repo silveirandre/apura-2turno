@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { RefreshCw, Vote } from 'lucide-react';
 import StateCard from './components/StateCard';
 import AcreWidget from './components/AcreWidget';
+import ProjectionWidget from './components/ProjectionWidget';
 
 const ESTADOS = [
   { uf: 'ac', nome: 'Acre' },
@@ -80,24 +81,21 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto space-y-6">
-        
+      <main className="max-w-7xl mx-auto space-y-6 pr-0 xl:pr-88">
         {/* Destaque Principal: BRASIL */}
         <section className="bg-slate-800/90 border-2 border-emerald-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-          <div className="md:col-span-2">
-            <StateCard
-              uf="br"
-              nomeEstado="Brasil (Total Nacional)"
-              dados2T={dadosGerais.dadosTse}
-              dados1T={dadosGerais.primeiroTurno}
-            />
-          </div>
+          <StateCard
+            uf="br"
+            nomeEstado="Brasil (Total Nacional)"
+            dados2T={dadosGerais.dadosTse}
+            dados1T={dadosGerais.primeiroTurno}
+          />
         </section>
 
         {/* Grelha dos Estados */}
         <section>
           <h2 className="text-lg font-bold text-slate-300 mb-4 px-1">Estados (UFs)</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {ESTADOS.map((est) => (
               <StateCard
                 key={est.uf}
@@ -110,6 +108,9 @@ export default function App() {
           </div>
         </section>
       </main>
+
+      {/* Painel Flutuante de Projeções (Empilhado à direita em tons arroxeados) */}
+      <ProjectionWidget projecao={dadosGerais.projecao} />
 
       {/* Mini Widget Flutuante do Governo do Acre */}
       <AcreWidget />
