@@ -1,0 +1,15 @@
+# Dependências de pacotes
+node_modules/
+.pnpm-store/
+
+# Arquivos de build
+dist/
+build/
+
+# Logs e arquivos do sistema
+*.log
+.DS_Store
+
+# Variáveis de ambiente
+.env
+.env.local
