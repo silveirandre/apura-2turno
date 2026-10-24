@@ -58,58 +58,66 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 p-4 md:p-8 font-sans pb-28">
-      {/* Header */}
-      <header className="max-w-7xl mx-auto mb-8 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 shadow-xl backdrop-blur flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
-            <Vote className="w-8 h-8" />
+    <div className="min-h-screen bg-slate-900 text-slate-100 p-4 md:p-8 font-sans pb-28 flex flex-col justify-between">
+      <div>
+        {/* Header */}
+        <header className="max-w-7xl mx-auto mb-8 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-6 shadow-xl backdrop-blur flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+              <Vote className="w-8 h-8" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Apuração Presidencial — 2º Turno</h1>
+              <p className="text-xs text-slate-400 mt-0.5">Painel de Monitoramento em Tempo Real</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Apuração Presidencial — 2º Turno</h1>
-            <p className="text-xs text-slate-400 mt-0.5">Painel de Monitoramento em Tempo Real</p>
-          </div>
-        </div>
 
-        <button
-          onClick={fetchApuracaoCompleta}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-700/60 hover:bg-slate-700 border border-slate-600 rounded-xl text-xs font-semibold text-slate-200 transition-all cursor-pointer"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
-          <span>Atualizar Dados</span>
-        </button>
-      </header>
+          <button
+            onClick={fetchApuracaoCompleta}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-700/60 hover:bg-slate-700 border border-slate-600 rounded-xl text-xs font-semibold text-slate-200 transition-all cursor-pointer"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
+            <span>Atualizar Dados</span>
+          </button>
+        </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto space-y-6 pr-0 xl:pr-88">
-        {/* Destaque Principal: BRASIL */}
-        <section className="bg-slate-800/90 border-2 border-emerald-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
-          <StateCard
-            uf="br"
-            nomeEstado="Brasil (Total Nacional)"
-            dados2T={dadosGerais.dadosTse}
-            dados1T={dadosGerais.primeiroTurno}
-          />
-        </section>
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto space-y-6 pr-0 xl:pr-88">
+          {/* Destaque Principal: BRASIL */}
+          <section className="bg-slate-800/90 border-2 border-emerald-500/40 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+            <StateCard
+              uf="br"
+              nomeEstado="Brasil (Total Nacional)"
+              dados2T={dadosGerais.dadosTse}
+              dados1T={dadosGerais.primeiroTurno}
+            />
+          </section>
 
-        {/* Grelha dos Estados */}
-        <section>
-          <h2 className="text-lg font-bold text-slate-300 mb-4 px-1">Estados (UFs)</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {ESTADOS.map((est) => (
-              <StateCard
-                key={est.uf}
-                uf={est.uf}
-                nomeEstado={est.nome}
-                dados2T={dadosGerais.dadosTse}
-                dados1T={dadosGerais.primeiroTurno}
-              />
-            ))}
-          </div>
-        </section>
-      </main>
+          {/* Grelha dos Estados */}
+          <section>
+            <h2 className="text-lg font-bold text-slate-300 mb-4 px-1">Estados (UFs)</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {ESTADOS.map((est) => (
+                <StateCard
+                  key={est.uf}
+                  uf={est.uf}
+                  nomeEstado={est.nome}
+                  dados2T={dadosGerais.dadosTse}
+                  dados1T={dadosGerais.primeiroTurno}
+                />
+              ))}
+            </div>
+          </section>
+        </main>
+      </div>
 
-      {/* Painel Flutuante de Projeções (Empilhado à direita em tons arroxeados) */}
+      {/* Rodapé do Sistema */}
+      <footer className="max-w-7xl mx-auto w-full mt-12 pt-6 border-t border-slate-800 text-center text-xs text-slate-500 font-mono pr-0 xl:pr-88">
+        <p>Sistema de Monitoramento de Apuração — 2º Turno</p>
+        <p className="text-slate-400 font-semibold mt-1">Desenvolvedor: Andre Silveira</p>
+      </footer>
+
+      {/* Painel Flutuante de Projeções */}
       <ProjectionWidget projecao={dadosGerais.projecao} />
 
       {/* Mini Widget Flutuante do Governo do Acre */}

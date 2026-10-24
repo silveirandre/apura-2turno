@@ -1,71 +1,110 @@
 import React from 'react';
 
 export default function StateCard({ uf, nomeEstado, dados2T, dados1T }) {
-  const pst = dados2T?.pst || '0,00';
-  const cands = dados2T?.cand || [];
+  const pctApuradoStr = dados2T?.pst || '0,00';
+
+  // Lista de candidatos
+  const listaCandidatos = dados2T?.cand ? [...dados2T.cand] : [
+    { nm: 'Candidato A', n: '13', pvp: '45,00', vap: '0', st: '' },
+    { nm: 'Candidato B', n: '22', pvp: '55,00', vap: '0', st: '' }
+  ];
+
+  // ORDENAÇÃO DINÂMICA: Maior percentual no topo
+  listaCandidatos.sort((a, b) => {
+    const valA = parseFloat((a.pvp || '0').replace(',', '.'));
+    const valB = parseFloat((b.pvp || '0').replace(',', '.'));
+    return valB - valA;
+  });
+
+  const c1_2T = listaCandidatos[0]; // Líder
+  const c2_2T = listaCandidatos[1]; // Segundo colocado
+
+  const p1 = parseFloat((c1_2T.pvp || '0').replace(',', '.')) || 0;
+  const p2 = parseFloat((c2_2T.pvp || '0').replace(',', '.')) || 0;
+
+  // CRITÉRIO DE RISCO ZERO: Exibe ELEITO APENAS quando o TSE confirmar oficialmente no JSON (st = 'e' ou 'Eleito')
+  const isEleito1 = c1_2T.st?.toLowerCase().includes('eleito') || c1_2T.st === 'e';
+  const isEleito2 = c2_2T.st?.toLowerCase().includes('eleito') || c2_2T.st === 'e';
+
+  // Referência do 1º Turno
+  const pct1T_13 = dados1T?.cand1 ? dados1T.cand1.toFixed(2).replace('.', ',') : '0,00';
+  const pct1T_22 = dados1T?.cand2 ? dados1T.cand2.toFixed(2).replace('.', ',') : '0,00';
 
   return (
-    <div className="relative overflow-hidden bg-slate-800/90 border border-slate-700/80 rounded-2xl p-5 shadow-lg flex flex-col justify-between hover:border-slate-600 transition-all">
-      
-      {/* Camada de Fundo / Marca d'Água do 1º Turno */}
-      {dados1T && (
-        <div className="absolute inset-0 pointer-events-none flex flex-col justify-end p-4 opacity-10 select-none">
-          <div className="text-right">
-            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-300 block">1º Turno (Ref)</span>
-            <div className="text-xs font-mono text-slate-200 mt-1">
-              <span>C1: {dados1T.cand1}%</span> | <span>C2: {dados1T.cand2}%</span>
-            </div>
-          </div>
+    <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-4 shadow-lg flex flex-col justify-between gap-3 relative overflow-hidden">
+      {/* Cabeçalho */}
+      <div className="flex justify-between items-start border-b border-slate-700/50 pb-2">
+        <div>
+          <h3 className="font-bold text-white text-base tracking-tight">{nomeEstado}</h3>
+          <span className="text-[10px] text-slate-400 font-mono uppercase">{uf}</span>
         </div>
-      )}
-
-      {/* Conteúdo Principal do 2º Turno (Frente) */}
-      <div className="relative z-10">
-        <div className="flex justify-between items-center mb-3">
-          <div>
-            <h3 className="text-lg font-bold text-white tracking-wide">{nomeEstado}</h3>
-            <span className="text-xs text-slate-400 uppercase font-mono">{uf.toUpperCase()}</span>
-          </div>
-          <div className="text-right">
-            <span className="text-[11px] text-slate-400 block">Apurado</span>
-            <span className="text-xs font-bold text-emerald-400 font-mono">{pst}%</span>
-          </div>
-        </div>
-
-        <div className="space-y-3 my-2">
-          {cands.length > 0 ? (
-            cands.map((c) => {
-              const pct = parseFloat(c.pvp.replace(',', '.'));
-              return (
-                <div key={c.n} className="bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
-                  <div className="flex justify-between items-center text-xs font-medium text-slate-200 mb-1.5">
-                    <span className="truncate">{c.nm} <span className="text-slate-500">({c.n})</span></span>
-                    <span className="font-bold text-emerald-400 font-mono">{c.pvp}%</span>
-                  </div>
-                  <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })
-          ) : (
-            <div className="text-xs text-slate-500 text-center py-4 font-mono">
-              Aguardando apuração...
-            </div>
-          )}
+        <div className="text-right">
+          <span className="text-[10px] text-slate-400 block font-medium uppercase tracking-wider">Apurado</span>
+          <span className="font-mono text-sm font-bold text-emerald-400">{pctApuradoStr}%</span>
         </div>
       </div>
 
-      {/* Rodapé com indicação discreta de referência */}
-      {dados1T && (
-        <div className="relative z-10 pt-2 border-t border-slate-700/40 text-[10px] text-slate-500 flex justify-between">
-          <span>Marca d'água: 1º Turno</span>
-          <span>1T: {dados1T.cand1}% / {dados1T.cand2}%</span>
+      {/* Candidatos e Barras */}
+      <div className="space-y-3 my-1">
+        {/* LÍDER DO 2º TURNO */}
+        <div className="space-y-1">
+          <div className="flex justify-between items-center text-xs">
+            <span className="font-semibold text-slate-200 truncate pr-2 flex items-center gap-2">
+              <span>{c1_2T.nm} <span className="text-slate-400 font-normal">({c1_2T.n})</span></span>
+              {isEleito1 && (
+                <span className="bg-emerald-500 text-slate-950 font-black px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider animate-pulse shadow-sm shadow-emerald-500/50 shrink-0">
+                  ELEITO
+                </span>
+              )}
+            </span>
+            <span className="font-mono font-bold text-emerald-400 text-sm shrink-0">{c1_2T.pvp}%</span>
+          </div>
+          <div className="w-full bg-slate-900/80 rounded-full h-2 overflow-hidden border border-slate-700/50">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${isEleito1 ? 'bg-emerald-400' : 'bg-emerald-500'}`}
+              style={{ width: `${Math.min(100, Math.max(0, p1))}%` }}
+            />
+          </div>
         </div>
-      )}
+
+        {/* 2º COLOCADO */}
+        <div className="space-y-1">
+          <div className="flex justify-between items-center text-xs">
+            <span className="font-semibold text-slate-200 truncate pr-2 flex items-center gap-2">
+              <span>{c2_2T.nm} <span className="text-slate-400 font-normal">({c2_2T.n})</span></span>
+              {isEleito2 && (
+                <span className="bg-emerald-500 text-slate-950 font-black px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider animate-pulse shadow-sm shadow-emerald-500/50 shrink-0">
+                  ELEITO
+                </span>
+              )}
+            </span>
+            <span className="font-mono font-bold text-emerald-400 text-sm shrink-0">{c2_2T.pvp}%</span>
+          </div>
+          <div className="w-full bg-slate-900/80 rounded-full h-2 overflow-hidden border border-slate-700/50">
+            <div
+              className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(100, Math.max(0, p2))}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Rodapé do 1º Turno */}
+      <div className="pt-2 border-t border-slate-700/40 flex items-center justify-between gap-1 text-[10px] text-slate-400/80 font-mono">
+        <span className="bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-700/40 text-[9px] uppercase tracking-wider text-slate-400 shrink-0">
+          1º Turno
+        </span>
+        
+        <div className="flex items-center gap-1.5 text-[10px] font-medium">
+          <span className="whitespace-nowrap">
+            13: <strong className="text-slate-200">{pct1T_13}%</strong>
+          </span>
+          <span className="text-slate-600">•</span>
+          <span className="whitespace-nowrap">
+            22: <strong className="text-slate-200">{pct1T_22}%</strong>
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
